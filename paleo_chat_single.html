@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paleo-Hebrew Chat — Single File</title>
+<meta name="theme-color" content="#111111">
+<style>
+  :root { --bg:#0f1115; --panel:#171a21; --ink:#e8e9ee; --muted:#a9afc3; --accent:#7bd389; --danger:#ff6b6b; --chip:#232735; --border:#2a2f3d; }
+  *{box-sizing:border-box} html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;justify-content:space-between}
+  header h1{font-size:18px;margin:0}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;background:var(--chip);border:1px solid var(--border);border-radius:999px;color:var(--muted);font-size:12px}
+  main{max-width:1024px;margin:0 auto;padding:16px;display:grid;grid-template-columns:360px 1fr;gap:16px}
+  @media (max-width:980px){ main{grid-template-columns:1fr} }
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .panel header{background:transparent;border:none;padding:12px 14px}
+  .panel .content{padding:12px 14px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .field{display:flex;flex-direction:column;gap:6px;width:100%}
+  label{color:var(--muted);font-size:12px}
+  input,button,textarea{
+    background:#10131a;border:1px solid var(--border);color:var(--ink);padding:10px 12px;border-radius:10px;font-size:14px;outline:none;
+  }
+  input:focus,textarea:focus{border-color:#3a4157}
+  button{cursor:pointer}
+  .danger{background:#28191c;border-color:#4a2b32;color:#ffd2d2}
+  .accent{background:#122017;border-color:#224b2d;color:#d3ffd9}
+  .muted{background:#10131a;border-color:#2b3142;color:var(--muted)}
+  .msg-list{height:52vh;min-height:280px;overflow:auto;padding:8px 12px;display:flex;flex-direction:column;gap:10px}
+  .msg{display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:#10131a;border:1px solid var(--border);border-radius:12px}
+  .meta{font-size:12px;color:var(--muted);display:flex;gap:8px;justify-content:space-between;align-items:center}
+  .bubble{font-size:16px;line-height:1.5}
+  .sub{font-size:13px;color:var(--muted)}
+  .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:6px;background:#0c0f15;color:#c7d0ea}
+  .stack{display:flex;flex-direction:column;gap:8px}
+  .flex{display:flex;gap:8px;align-items:center}
+  .space{flex:1}
+  .chip{padding:6px 10px;border-radius:999px;background:#0f1320;border:1px solid var(--border);color:var(--muted);font-size:12px}
+  .foot{padding:10px;border-top:1px solid var(--border)}
+  .hint{font-size:12px;color:var(--muted)}
+  .hebrew{font-family:"Noto Sans Hebrew","SBL Hebrew","Ezra SIL","Times New Roman",serif}
+  .paleo{font-family:"Noto Sans Old Hebrew","PaleoHebrew","Segoe UI Historic","Times New Roman",serif}
+  .kbdrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .key{border:1px solid var(--border);background:#0e121a;border-radius:8px;padding:8px 10px;cursor:pointer}
+  .copybar{display:flex;gap:6px}
+  .copybtn{border:1px dashed #3a4157;background:#0d1219;border-radius:8px;padding:4px 8px;font-size:12px;color:#cfe8db}
+</style>
+</head>
+<body>
+  <header>
+    <h1>𐤐𐤋𐤉𐤀𐤅 𐤄𐤁𐤓𐤉 Chat (Single)</h1>
+    <span class="pill">Open this file • No unzip</span>
+  </header>
+
+  <main>
+    <section class="panel">
+      <header><strong>Room & Settings</strong></header>
+      <div class="content stack">
+        <div class="field">
+          <label>Display name</label>
+          <input id="displayName" placeholder="e.g., Palah" />
+        </div>
+        <div class="row">
+          <div class="field" style="flex:1">
+            <label>Room</label>
+            <input id="room" placeholder="family, study, kids, etc." />
+          </div>
+          <div class="field" style="width:180px">
+            <label>Passcode (simple)</label>
+            <input id="pass" placeholder="optional" />
+          </div>
+          <div class="field" style="width:120px">
+            <label>&nbsp;</label>
+            <button id="joinBtn" class="accent">Join</button>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="row">
+            <span class="chip">Mode:</span>
+            <label class="chip"><input type="radio" name="mode" value="latin" checked /> Latin → Hebrew/Paleo</label>
+            <label class="chip"><input type="radio" name="mode" value="hebrew" /> Hebrew/Paleo → Latin</label>
+          </div>
+          <div class="row">
+            <span class="chip">Script:</span>
+            <label class="chip"><input type="radio" name="script" value="square" checked /> Hebrew (square)</label>
+            <label class="chip"><input type="radio" name="script" value="paleo" /> Paleo-Hebrew (needs font)</label>
+            <label class="chip"><input type="checkbox" id="kbdToggle" /> On-screen keyboard</label>
+          </div>
+          <div class="row">
+            <span class="chip">Translation gloss:</span>
+            <label class="chip"><input type="checkbox" id="glossToggle" checked /> Show English if known</label>
+          </div>
+          <p class="hint">Paleo glyphs look best with a font like <span class="kbd">Noto Sans Old Hebrew</span>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="flex"><strong>Chat</strong><span class="space"></span></header>
+      <div id="messages" class="msg-list"></div>
+      <div class="foot">
+        <div id="kbd" class="content" style="display:none">
+          <div class="kbdrow paleo" id="kbdRow"></div>
+        </div>
+        <div class="row">
+          <input id="text" placeholder="Type Latin or Hebrew... (Enter to send)" style="flex:1" />
+          <button id="send" class="accent">Send</button>
+          <button id="clear" class="danger">Clear</button>
+        </div>
+        <div class="row">
+          <span class="hint">Preview:</span>
+          <span id="previewHeb" class="hebrew"></span>
+          <span id="previewPaleo" class="paleo"></span>
+          <span id="previewLatin" class="sub"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+<script>
+// ===== Translator & Keyboard =====
+const HEB = { alef:"א",bet:"ב",gimel:"ג",dalet:"ד",he:"ה",vav:"ו",zayin:"ז",het:"ח",tet:"ט",yod:"י",kaf:"כ",lamed:"ל",mem:"מ",nun:"נ",samekh:"ס",ayin:"ע",pe:"פ",tsadi:"צ",qof:"ק",resh:"ר",shin:"ש",tav:"ת" };
+const PAL = { alef:"𐤀",bet:"𐤁",gimel:"𐤂",dalet:"𐤃",he:"𐤄",vav:"𐤅",zayin:"𐤆",het:"𐤇",tet:"𐤈",yod:"𐤉",kaf:"𐤊",lamed:"𐤋",mem:"𐤌",nun:"𐤍",samekh:"𐤎",ayin:"𐤏",pe:"𐤐",tsadi:"𐤑",qof:"𐤒",resh:"𐤓",shin:"𐤔",tav:"𐤕" };
+const LAT2KEY = [["sh","shin"],["ts","tsadi"],["ch","het"],["kh","het"],["th","tav"],["a","alef"],["b","bet"],["g","gimel"],["d","dalet"],["h","he"],["v","vav"],["w","vav"],["z","zayin"],["x","samekh"],["t","tav"],["y","yod"],["k","kaf"],["l","lamed"],["m","mem"],["n","nun"],["s","samekh"],["'","alef"],["`","ayin"],["o","vav"],["u","vav"],["q","qof"],["c","kaf"],["r","resh"],["p","pe"],["f","pe"],["e","he"],["i","yod"]];
+const HEB2LAT = { [HEB.alef]:"'",[HEB.bet]:"b",[HEB.gimel]:"g",[HEB.dalet]:"d",[HEB.he]:"h",[HEB.vav]:"w",[HEB.zayin]:"z",[HEB.het]:"ch",[HEB.tet]:"t",[HEB.yod]:"y",[HEB.kaf]:"k",[HEB.lamed]:"l",[HEB.mem]:"m",[HEB.nun]:"n",[HEB.samekh]:"s",[HEB.ayin]:"`",[HEB.pe]:"p",[HEB.tsadi]:"ts",[HEB.qof]:"q",[HEB.resh]:"r",[HEB.shin]:"sh",[HEB.tav]:"t" };
+const PAL2LAT = {}; Object.entries(PAL).forEach(([k,v])=>{ PAL2LAT[v] = HEB2LAT[HEB[k]] || "?"; });
+
+function latinToHebrew(str, script="square"){
+  let out = "", i=0; const set = (script==="paleo")?PAL:HEB;
+  const di = LAT2KEY.filter(x=>x[0].length===2), si = LAT2KEY.filter(x=>x[0].length===1);
+  const lower = str.toLowerCase();
+  while(i<lower.length){
+    const sub2 = lower.slice(i,i+2), f2 = di.find(([dig])=>dig===sub2);
+    if(f2){ out += set[f2[1]]; i+=2; continue; }
+    const sub1 = lower[i], f1 = si.find(([ch])=>ch===sub1);
+    out += f1 ? set[f1[1]] : lower[i]; i+=1;
+  }
+  return out;
+}
+function hebrewToLatin(str){
+  let out=""; for(const ch of str){ out += HEB2LAT[ch]||PAL2LAT[ch]||ch; } return out;
+}
+const KEYBOARD_PAL = [PAL.alef,PAL.bet,PAL.gimel,PAL.dalet,PAL.he,PAL.vav,PAL.zayin,PAL.het,PAL.tet,PAL.yod,PAL.kaf,PAL.lamed,PAL.mem,PAL.nun,PAL.samekh,PAL.ayin,PAL.pe,PAL.tsadi,PAL.qof,PAL.resh,PAL.shin,PAL.tav];
+const KEYBOARD_HEB = [HEB.alef,HEB.bet,HEB.gimel,HEB.dalet,HEB.he,HEB.vav,HEB.zayin,HEB.het,HEB.tet,HEB.yod,HEB.kaf,HEB.lamed,HEB.mem,HEB.nun,HEB.samekh,HEB.ayin,HEB.pe,HEB.tsadi,HEB.qof,HEB.resh,HEB.shin,HEB.tav];
+
+// ===== Glossary =====
+const GLOSSARY = {"shalom":"peace; hello","shalam":"to be complete/at peace","shalawam":"peace (variant)","toda":"thanks","todah":"thanks","barak":"bless","ach":"brother","ahch":"brother","achoth":"sister","ahchoth":"sister","abba":"father","ima":"mother","yasharal":"Israel","yah":"short form of the divine name","shalach":"send","ahabah":"love","shalom aleichem":"peace be upon you","aleichem shalom":"upon you be peace","barak atha":"bless you","mashpachah":"family","ban":"son","bath":"daughter","todah rabah":"many thanks"};
+function lookupGloss(latin){
+  const key = latin.toLowerCase().trim().replace(/\s+/g," ");
+  if(GLOSSARY[key]) return GLOSSARY[key];
+  const parts = key.split(" ");
+  const glosses = parts.map(w=>GLOSSARY[w]?`${w}: ${GLOSSARY[w]}`:null).filter(Boolean);
+  return glosses.length?glosses.join(" • "):null;
+}
+
+// ===== App =====
+const el = s=>document.querySelector(s);
+const messagesEl = el("#messages"), textEl = el("#text"),
+  sendBtn = el("#send"), clearBtn = el("#clear"),
+  joinBtn = el("#joinBtn"), nameEl = el("#displayName"),
+  roomEl = el("#room"), passEl = el("#pass"),
+  kbdToggle = el("#kbdToggle"), kbdEl = el("#kbd"), kbdRow = el("#kbdRow");
+
+let mode="latin", script="square", showGloss=true, displayName="Guest", currentRoom="general", passcode="";
+
+document.querySelectorAll("input[name='mode']").forEach(r=>r.addEventListener("change", e=>{ mode=e.target.value; refreshPreview(); }));
+document.querySelectorAll("input[name='script']").forEach(r=>r.addEventListener("change", e=>{ script=e.target.value; buildKeyboard(); refreshPreview(); }));
+el("#glossToggle").addEventListener("change", e=>{ showGloss=e.target.checked; renderMessages(); });
+kbdToggle.addEventListener("change", e=>{ kbdEl.style.display = e.target.checked ? "block" : "none"; });
+
+nameEl.addEventListener("input", ()=> displayName = nameEl.value||"Guest");
+roomEl.addEventListener("input", ()=> currentRoom = roomEl.value||"general");
+passEl.addEventListener("input", ()=> passcode = passEl.value||"");
+
+joinBtn.addEventListener("click", ()=> joinRoom(currentRoom, passcode));
+textEl.addEventListener("input", refreshPreview);
+textEl.addEventListener("keydown", e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendMessage(); }});
+sendBtn.addEventListener("click", sendMessage);
+clearBtn.addEventListener("click", clearMessages);
+
+function nowIso(){ return new Date().toISOString(); }
+function roomKey(room, pass){ return pass ? `${room}__${simpleHash(pass)}` : room; }
+function msgObj(raw){
+  const obj = { id: crypto.randomUUID(), room: roomKey(currentRoom, passcode), author: displayName, raw, mode, script, createdAt: nowIso() };
+  if(mode==="latin"){ obj.hebrew=latinToHebrew(raw,"square"); obj.paleo=latinToHebrew(raw,"paleo"); obj.latin=raw; }
+  else { obj.latin=hebrewToLatin(raw); obj.hebrew=latinToHebrew(obj.latin,"square"); obj.paleo=latinToHebrew(obj.latin,"paleo"); }
+  obj.gloss = lookupGloss(obj.latin);
+  return obj;
+}
+function localKey(room){ return `paleochat_${room}`; }
+function loadLocal(room){ try{ return JSON.parse(localStorage.getItem(localKey(room))||"[]"); }catch(_){ return []; } }
+function saveLocal(room, arr){ localStorage.setItem(localKey(room), JSON.stringify(arr)); }
+
+const state = { messages: loadLocal(roomKey(currentRoom, passcode)) };
+renderMessages();
+
+function renderMessages(list){
+  const msgs = list || state.messages;
+  messagesEl.innerHTML = "";
+  msgs.forEach(m=>{
+    const div = document.createElement("div"); div.className="msg";
+    const meta = document.createElement("div"); meta.className="meta";
+    const when = new Date(m.createdAt).toLocaleString();
+    const left = document.createElement("span"); left.textContent = `${m.author} • ${when}`;
+    const copybar = document.createElement("span"); copybar.className="copybar";
+    copybar.innerHTML = `<button class="copybtn" data-type="hebrew">Copy Heb</button><button class="copybtn" data-type="paleo">Copy Paleo</button><button class="copybtn" data-type="latin">Copy Latin</button>`;
+    meta.appendChild(left); meta.appendChild(copybar);
+
+    const bubble = document.createElement("div"); bubble.className="bubble";
+    const heb = document.createElement("div"); heb.className="hebrew"; heb.textContent = m.hebrew;
+    const pal = document.createElement("div"); pal.className="paleo"; pal.textContent = m.paleo;
+    const lat = document.createElement("div"); lat.className="sub"; lat.textContent = m.latin;
+    bubble.append(heb,pal,lat);
+    if(showGloss && m.gloss){ const g=document.createElement("div"); g.className="sub"; g.textContent = "English: "+m.gloss; bubble.appendChild(g); }
+
+    div.append(meta,bubble); messagesEl.appendChild(div);
+    copybar.querySelectorAll(".copybtn").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        const t=btn.getAttribute("data-type"); const content = t==="hebrew"?m.hebrew:t==="paleo"?m.paleo:m.latin;
+        try{ await navigator.clipboard.writeText(content); btn.textContent="Copied!"; setTimeout(()=>btn.textContent="Copy "+t[0].toUpperCase()+t.slice(1), 900);}catch(_){}
+      });
+    });
+  });
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+function refreshPreview(){
+  const raw=textEl.value; let heb,pal,lat;
+  if(mode==="latin"){ lat=raw; heb=latinToHebrew(raw,"square"); pal=latinToHebrew(raw,"paleo"); }
+  else { lat=hebrewToLatin(raw); heb=latinToHebrew(lat,"square"); pal=latinToHebrew(lat,"paleo"); }
+  el("#previewHeb").textContent=heb; el("#previewPaleo").textContent=pal; el("#previewLatin").textContent=lat ? "Latin: "+lat : "";
+}
+function sendMessage(){
+  const raw = textEl.value.trim(); if(!raw) return;
+  const m = msgObj(raw); textEl.value=""; refreshPreview();
+  state.messages.push(m); saveLocal(m.room, state.messages); renderMessages();
+}
+function clearMessages(){
+  const rkey = roomKey(currentRoom, passcode);
+  state.messages=[]; saveLocal(rkey, state.messages); renderMessages();
+}
+function joinRoom(room, pass){
+  const rkey = roomKey(room||"general", pass||"");
+  state.messages = loadLocal(rkey); renderMessages();
+}
+function simpleHash(s){ let h=0; for(let i=0;i<s.length;i++){ h=(h*31 + s.charCodeAt(i))>>>0; } return h.toString(36); }
+function buildKeyboard(){
+  kbdRow.innerHTML=""; const keys = (script==="paleo")?KEYBOARD_PAL:KEYBOARD_HEB;
+  keys.forEach(ch=>{ const b=document.createElement("button"); b.className="key "+(script==="paleo"?"paleo":"hebrew"); b.textContent=ch;
+    b.addEventListener("click", ()=>{ const start=textEl.selectionStart||textEl.value.length, end=textEl.selectionEnd||textEl.value.length, v=textEl.value;
+      textEl.value=v.slice(0,start)+ch+v.slice(end); textEl.focus(); textEl.selectionStart=textEl.selectionEnd=start+ch.length; refreshPreview();
+    }); kbdRow.appendChild(b);
+  });
+}
+buildKeyboard();
+
+// Service worker only on http(s) origins (won't work for file://)
+if (location.origin.startsWith("http")) {
+  const swCode = `self.addEventListener('install', e=>{e.waitUntil(caches.open('paleo-single-v1').then(c=>c.addAll(['./'])))});
+                  self.addEventListener('fetch', e=>{e.respondWith(caches.match(e.request).then(r=>r || fetch(e.request)))})`;
+  const blob = new Blob([swCode], {type:'text/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register(swUrl);
+}
+</script>
+</body>
+</html>
